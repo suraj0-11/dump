@@ -1,30 +1,27 @@
+import os
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Define a function to handle the /start command
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! I'm the Rename Bot. Send me a new name for yourself by typing /rename followed by your new name.")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello! I'm the File Extension Rename Bot. Send me a file extension and a new extension to rename all files with the old extension to the new extension.")
 
 # Define a function to handle the /rename command
 def rename(update, context):
-    new_name = context.args[0]
-    context.user_data['old_name'] = update.message.chat.first_name
-    context.user_data['new_name'] = new_name
-    message = "Your name has been changed from {} to {}.".format(context.user_data['old_name'], context.user_data['new_name'])
-    context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+    if len(context.args) < 2:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Please specify the old extension and new extension separated by a space.")
+        return
+    old_extension = context.args[0]
+    new_extension = context.args[1]
+    for file_name in os.listdir('.'):
+        if file_name.endswith(old_extension):
+            old_name = file_name
+            new_name = os.path.splitext(file_name)[0] + new_extension
+            os.rename(old_name, new_name)
+            context.bot.send_message(chat_id=update.effective_chat.id, text="The file has been renamed from {} to {}.".format(old_name, new_name))
 
 # Define a function to handle all other messages
 def echo(update, context):
-    message = update.message.text
-    if 'old_name' in context.user_data and message.lower() == 'undo':
-        old_name = context.user_data['old_name']
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Your name has been changed back to {}.".format(old_name))
-        context.user_data.pop('old_name')
-        context.user_data.pop('new_name')
-    elif 'new_name' in context.user_data:
-        new_name = context.user_data['new_name']
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Hello, {}!".format(new_name))
-    else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Send me a new name for yourself by typing /rename followed by your new name.")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Send me a file extension and a new extension to rename all files with the old extension to the new extension.")
 
 # Set up the updater and dispatcher
 updater = Updater(token='5703066773:AAFHwa56RRcA5UeJ7FfN29GFw8lV6kERo3E', use_context=True)
